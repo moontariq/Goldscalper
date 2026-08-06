@@ -1,5 +1,5 @@
 #property copyright "GoldScalper"
-#property version   "0.5.0"
+#property version   "0.6.0"
 #property strict
 #property description "Professional MT5 Gold Scalping EA foundation"
 
@@ -7,6 +7,7 @@
 #include <GoldScalpAI/Config.mqh>
 #include <GoldScalpAI/Constants.mqh>
 #include <GoldScalpAI/DailyLossGuard.mqh>
+#include <GoldScalpAI/EntryQualifier.mqh>
 #include <GoldScalpAI/Enums.mqh>
 #include <GoldScalpAI/IndicatorManager.mqh>
 #include <GoldScalpAI/Logger.mqh>
@@ -14,6 +15,7 @@
 #include <GoldScalpAI/MarketGuard.mqh>
 #include <GoldScalpAI/RiskManager.mqh>
 #include <GoldScalpAI/SessionManager.mqh>
+#include <GoldScalpAI/SignalScorer.mqh>
 #include <GoldScalpAI/SmartMoneyAnalyzer.mqh>
 #include <GoldScalpAI/TradeManager.mqh>
 #include <GoldScalpAI/TrendAnalyzer.mqh>
@@ -37,20 +39,24 @@ input int    InpAtrPeriod         = 14;
 input group "Price Action"
 input int    InpSwingStrength     = 3;
 input int    InpStructureLookback = 100;
+input group "Entry Qualification"
+input double InpMinimumConfidence = 75.00;
 
-CGSABrokerManager     g_broker_manager;
-CGSAConfig            g_config;
-CGSADailyLossGuard    g_daily_loss_guard;
-CGSAIndicatorManager  g_indicator_manager;
-CGSALogger            g_logger;
-CGSAMarketData        g_market_data;
-CGSAMarketGuard       g_market_guard;
-CGSARiskManager       g_risk_manager;
-CGSASessionManager    g_session_manager;
+CGSABrokerManager      g_broker_manager;
+CGSAConfig             g_config;
+CGSADailyLossGuard     g_daily_loss_guard;
+CGSAEntryQualifier     g_entry_qualifier;
+CGSAIndicatorManager   g_indicator_manager;
+CGSALogger             g_logger;
+CGSAMarketData         g_market_data;
+CGSAMarketGuard        g_market_guard;
+CGSARiskManager        g_risk_manager;
+CGSASessionManager     g_session_manager;
+CGSASignalScorer       g_signal_scorer;
 CGSASmartMoneyAnalyzer g_smart_money_analyzer;
-CGSATradeManager      g_trade_manager;
-CGSATrendAnalyzer     g_trend_analyzer;
-ENUM_GSA_EA_STATE     g_state=GSA_STATE_INITIALIZING;
+CGSATradeManager       g_trade_manager;
+CGSATrendAnalyzer      g_trend_analyzer;
+ENUM_GSA_EA_STATE      g_state=GSA_STATE_INITIALIZING;
 
 int OnInit()
   {
@@ -61,10 +67,11 @@ int OnInit()
       g_logger.Error("Invalid input configuration. EA initialization stopped.");
       return INIT_PARAMETERS_INCORRECT;
      }
-   if(InpSwingStrength<1 || InpStructureLookback<(InpSwingStrength*2+1))
+   if(InpSwingStrength<1 || InpStructureLookback<(InpSwingStrength*2+1) ||
+      InpMinimumConfidence<GSA_MIN_CONFIDENCE || InpMinimumConfidence>GSA_MAX_CONFIDENCE)
      {
       g_state=GSA_STATE_ERROR;
-      g_logger.Error("Invalid price-action configuration.");
+      g_logger.Error("Invalid analysis or entry-qualification configuration.");
       return INIT_PARAMETERS_INCORRECT;
      }
    if(!g_session_manager.Initialize(InpSessionStartHour,InpSessionEndHour))
@@ -94,8 +101,8 @@ int OnInit()
      }
 
    g_state=GSA_STATE_READY;
-   g_logger.Info(StringFormat("Initialized v%s for %s. Signal timeframe=%s.",
-                              GSA_VERSION,_Symbol,EnumToString(InpSignalTimeframe)));
+   g_logger.Info(StringFormat("Initialized v%s for %s. Minimum confidence=%.2f.",
+                              GSA_VERSION,_Symbol,InpMinimumConfidence));
    return INIT_SUCCEEDED;
   }
 
@@ -123,9 +130,12 @@ void OnTick()
    const ENUM_GSA_MARKET_TREND trend=g_trend_analyzer.GetTrend(g_indicator_manager);
    const ENUM_GSA_MARKET_STRUCTURE structure=g_smart_money_analyzer.Analyze(
       bars,ArraySize(bars),InpSwingStrength);
-   if(trend==GSA_TREND_UNKNOWN || structure==GSA_STRUCTURE_UNKNOWN)
+   double atr=0.0;
+   const bool has_valid_atr=(g_indicator_manager.GetAtr(atr) && atr>0.0);
+   const GSA_SIGNAL_SCORE score=g_signal_scorer.Score(trend,structure,has_valid_atr);
+   if(!g_entry_qualifier.IsQualified(score,InpMinimumConfidence))
       return;
 
    // Execution remains disabled until entry and exit engines are implemented.
-   // No orders are sent by the v0.5.0-alpha foundation.
+   // No orders are sent by the v0.6.0-alpha foundation.
   }
