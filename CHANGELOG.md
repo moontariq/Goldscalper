@@ -2,6 +2,20 @@
 
 All notable changes to GoldScalper are documented here.
 
+## [0.5.0-alpha] - 2026-08-06
+
+### Added
+
+- Confirmed swing-high and swing-low detection with configurable strength
+- Closed-bar series retrieval for price-action analysis
+- Basic Smart Money Concepts break-of-structure classification
+- Configurable structure lookback and swing-strength inputs
+
+### Safety
+
+- Structure analysis uses completed candles only.
+- Trade execution remains disabled while entry and exit engines are under development.
+
 ## [0.4.0-alpha] - 2026-08-06
 
 ### Added
