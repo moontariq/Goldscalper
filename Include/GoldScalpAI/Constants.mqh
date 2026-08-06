@@ -1,7 +1,7 @@
 #ifndef GOLD_SCALP_AI_CONSTANTS_MQH
 #define GOLD_SCALP_AI_CONSTANTS_MQH
 
-#define GSA_VERSION             "0.1.0-alpha"
+#define GSA_VERSION             "0.2.0-alpha"
 #define GSA_DEFAULT_MAGIC       26080601
 #define GSA_MIN_RISK_PERCENT    0.10
 #define GSA_MAX_RISK_PERCENT    2.00
