@@ -1,6 +1,7 @@
 #ifndef GOLD_SCALP_AI_ENTRY_QUALIFIER_MQH
 #define GOLD_SCALP_AI_ENTRY_QUALIFIER_MQH
 
+#include "Constants.mqh"
 #include "Enums.mqh"
 
 class CGSAEntryQualifier
