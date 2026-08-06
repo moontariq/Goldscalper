@@ -14,6 +14,17 @@ public:
       bar=rates[0];
       return true;
      }
+
+   bool GetClosedBars(const ENUM_TIMEFRAMES timeframe,const int requested_count,
+                      MqlRates &bars[]) const
+     {
+      if(requested_count<=0)
+         return false;
+
+      ArraySetAsSeries(bars,true);
+      const int copied=CopyRates(_Symbol,timeframe,1,requested_count,bars);
+      return (copied==requested_count);
+     }
   };
 
 #endif
