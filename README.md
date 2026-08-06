@@ -2,30 +2,20 @@
 
 Professional MT5 Expert Advisor (EA) foundation for gold scalping.
 
-## Current version: v0.6.0-alpha
+## Current version: v0.7.0-alpha
 
-The EA now produces an explainable, deterministic confidence score from trend, confirmed market structure, and ATR availability. Signals must meet the configurable confidence threshold before they can progress to a future execution layer. Trade execution remains disabled.
+The EA can now turn a qualified signal into a validated, execution-free trade plan. The plan calculates a live bid/ask entry, ATR-based stop loss, risk-reward take profit, broker-compatible stop distance, and risk-based volume. It does not send an order.
 
-## Principles
+## Planning safeguards
 
-- Capital preservation first
-- No martingale and no grid trading
-- Small-account aware risk controls
-- Modular, testable MQL5 architecture
-- Strategy execution is disabled until market, risk, and entry modules are complete
-
-## Signal qualification
-
-- Bullish EMA trend + bullish break of structure: buy direction, 85 confidence
-- Bearish EMA trend + bearish break of structure: sell direction, 85 confidence
-- Trend-aligned range: directional watch signal, 45 confidence
-- Missing or conflicting evidence: no signal
-
-The default minimum confidence is 75, so only full trend-and-structure confluence qualifies.
+- Only qualified high-confidence signals can create a plan.
+- Stop loss is derived from ATR and must satisfy the broker stop-distance rule.
+- Volume is calculated from the configured percentage risk and stop distance.
+- The plan is rejected if any input, price, broker constraint, or volume is invalid.
 
 ## Roadmap
 
-1. Foundation, protection, analysis, and qualification
-2. Execution planning and exit management
+1. Foundation, protection, analysis, qualification, and planning
+2. Reviewable execution and position lifecycle management
 3. Dashboard, statistics, and alerts
 4. Backtesting, optimization, and release documentation
