@@ -7,6 +7,7 @@
 #include <GoldScalpAI/Constants.mqh>
 #include <GoldScalpAI/Enums.mqh>
 #include <GoldScalpAI/Logger.mqh>
+#include <GoldScalpAI/RiskManager.mqh>
 
 input group "General"
 input long   InpMagicNumber       = GSA_DEFAULT_MAGIC;
@@ -15,8 +16,9 @@ input group "Risk Management"
 input double InpRiskPerTradePct   = 1.00;
 input int    InpMaxSpreadPoints   = 500;
 
-CGSAConfig       g_config;
-CGSALogger       g_logger;
+CGSAConfig        g_config;
+CGSALogger        g_logger;
+CGSARiskManager   g_risk_manager;
 ENUM_GSA_EA_STATE g_state=GSA_STATE_INITIALIZING;
 
 int OnInit()
