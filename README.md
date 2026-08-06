@@ -2,9 +2,9 @@
 
 Professional MT5 Expert Advisor (EA) foundation for gold scalping.
 
-## Current version: v0.4.0-alpha
+## Current version: v0.5.0-alpha
 
-The EA now provides a data and indicator layer for the selected signal timeframe. It reads only completed bars, manages EMA and ATR indicator handles safely, and classifies the market trend from the fast/slow EMA relationship. Trade execution remains disabled while the entry and exit engines are under development.
+The EA now analyses confirmed swing highs and lows, then classifies a basic break of structure (bullish, bearish, or range) from completed candles. This provides a conservative price-action and Smart Money Concepts foundation for future entry rules. Trade execution remains disabled.
 
 ## Principles
 
@@ -14,21 +14,18 @@ The EA now provides a data and indicator layer for the selected signal timeframe
 - Modular, testable MQL5 architecture
 - Strategy execution is disabled until market, risk, and entry modules are complete
 
-## Current layout
+## Current analysis modules
 
-- `Experts/GoldScalpAI.mq5` — EA lifecycle and analysis pipeline
-- `Include/GoldScalpAI/MarketData.mqh` — closed-bar market data access
-- `Include/GoldScalpAI/IndicatorManager.mqh` — EMA and ATR handle lifecycle
-- `Include/GoldScalpAI/TrendAnalyzer.mqh` — EMA trend classification
-- `Include/GoldScalpAI/BrokerManager.mqh` — terminal and stop-distance constraints
-- `Include/GoldScalpAI/DailyLossGuard.mqh` — realized daily-loss circuit breaker
-- `Include/GoldScalpAI/RiskManager.mqh` — risk-based position sizing
-- `Include/GoldScalpAI/TradeManager.mqh` — position-capacity checks
+- `MarketData.mqh` — closed-bar series retrieval
+- `IndicatorManager.mqh` — EMA and ATR handle lifecycle
+- `TrendAnalyzer.mqh` — EMA trend classification
+- `PriceActionAnalyzer.mqh` — confirmed swing-high and swing-low detection
+- `SmartMoneyAnalyzer.mqh` — basic break-of-structure classification
 
 ## Roadmap
 
-1. Foundation, capital protection, and market data
-2. Price action and smart-money analysis
+1. Foundation, capital protection, and analysis
+2. Confluence scoring and entry qualification
 3. Entry and exit engines
 4. Dashboard, statistics, and alerts
 5. Backtesting, optimization, and release documentation
