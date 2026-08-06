@@ -2,6 +2,20 @@
 
 All notable changes to GoldScalper are documented here.
 
+## [0.7.0-alpha] - 2026-08-06
+
+### Added
+
+- Execution-free trade-plan data type
+- ATR-based dynamic stop loss and risk-reward take profit planning
+- Live bid/ask entry calculation by signal direction
+- Broker stop-distance and risk-based volume validation
+
+### Safety
+
+- A plan is rejected when price, volume, broker constraints, or inputs are invalid.
+- Trade execution remains disabled pending execution-layer review.
+
 ## [0.6.0-alpha] - 2026-08-06
 
 ### Added
