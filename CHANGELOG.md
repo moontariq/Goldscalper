@@ -2,6 +2,20 @@
 
 All notable changes to GoldScalper are documented here.
 
+## [0.6.0-alpha] - 2026-08-06
+
+### Added
+
+- Deterministic confluence scoring from trend, confirmed structure, and ATR availability
+- Directional signal score data type
+- Configurable minimum-confidence qualification gate
+- Default 75-confidence threshold; full trend/structure confluence scores 85
+
+### Safety
+
+- Incomplete or conflicting analysis produces no tradable signal.
+- Trade execution remains disabled while execution and exit modules are under development.
+
 ## [0.5.0-alpha] - 2026-08-06
 
 ### Added
