@@ -1,5 +1,5 @@
 #property copyright "GoldScalper"
-#property version   "0.6.0"
+#property version   "0.7.0"
 #property strict
 #property description "Professional MT5 Gold Scalping EA foundation"
 
@@ -18,6 +18,7 @@
 #include <GoldScalpAI/SignalScorer.mqh>
 #include <GoldScalpAI/SmartMoneyAnalyzer.mqh>
 #include <GoldScalpAI/TradeManager.mqh>
+#include <GoldScalpAI/TradePlanner.mqh>
 #include <GoldScalpAI/TrendAnalyzer.mqh>
 
 input group "General"
@@ -41,6 +42,9 @@ input int    InpSwingStrength     = 3;
 input int    InpStructureLookback = 100;
 input group "Entry Qualification"
 input double InpMinimumConfidence = 75.00;
+input group "Trade Planning"
+input double InpStopLossAtrMultiplier = 1.50;
+input double InpRiskRewardRatio        = 1.50;
 
 CGSABrokerManager      g_broker_manager;
 CGSAConfig             g_config;
@@ -55,6 +59,7 @@ CGSASessionManager     g_session_manager;
 CGSASignalScorer       g_signal_scorer;
 CGSASmartMoneyAnalyzer g_smart_money_analyzer;
 CGSATradeManager       g_trade_manager;
+CGSATradePlanner       g_trade_planner;
 CGSATrendAnalyzer      g_trend_analyzer;
 ENUM_GSA_EA_STATE      g_state=GSA_STATE_INITIALIZING;
 
@@ -68,10 +73,12 @@ int OnInit()
       return INIT_PARAMETERS_INCORRECT;
      }
    if(InpSwingStrength<1 || InpStructureLookback<(InpSwingStrength*2+1) ||
-      InpMinimumConfidence<GSA_MIN_CONFIDENCE || InpMinimumConfidence>GSA_MAX_CONFIDENCE)
+      InpMinimumConfidence<GSA_MIN_CONFIDENCE || InpMinimumConfidence>GSA_MAX_CONFIDENCE ||
+      InpStopLossAtrMultiplier<GSA_MIN_ATR_MULTIPLIER ||
+      InpRiskRewardRatio<GSA_MIN_RISK_REWARD)
      {
       g_state=GSA_STATE_ERROR;
-      g_logger.Error("Invalid analysis or entry-qualification configuration.");
+      g_logger.Error("Invalid analysis, qualification, or trade-plan configuration.");
       return INIT_PARAMETERS_INCORRECT;
      }
    if(!g_session_manager.Initialize(InpSessionStartHour,InpSessionEndHour))
@@ -136,6 +143,12 @@ void OnTick()
    if(!g_entry_qualifier.IsQualified(score,InpMinimumConfidence))
       return;
 
-   // Execution remains disabled until entry and exit engines are implemented.
-   // No orders are sent by the v0.6.0-alpha foundation.
+   const GSA_TRADE_PLAN plan=g_trade_planner.Create(
+      g_config,g_broker_manager,g_risk_manager,score,atr,
+      InpStopLossAtrMultiplier,InpRiskRewardRatio);
+   if(!plan.valid)
+      return;
+
+   // A validated plan exists, but execution remains disabled until v0.8 review.
+   // No orders are sent by the v0.7.0-alpha foundation.
   }
