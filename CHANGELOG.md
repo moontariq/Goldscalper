@@ -2,6 +2,20 @@
 
 All notable changes to GoldScalper are documented here.
 
+## [0.4.0-alpha] - 2026-08-06
+
+### Added
+
+- Closed-bar market-data access for a configurable signal timeframe
+- EMA and ATR indicator-handle lifecycle management
+- EMA-based bullish, bearish, neutral, and unknown trend classification
+- Configurable fast EMA, slow EMA, ATR, and signal-timeframe inputs
+
+### Safety
+
+- Analysis is based on closed candles only; incomplete current-bar values are not used.
+- Trade execution remains disabled while strategy and exit modules are under development.
+
 ## [0.3.0-alpha] - 2026-08-06
 
 ### Added
