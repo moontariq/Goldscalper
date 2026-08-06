@@ -32,6 +32,12 @@ enum ENUM_GSA_MARKET_STRUCTURE
    GSA_STRUCTURE_BULLISH_BREAK
   };
 
+struct GSA_SIGNAL_SCORE
+  {
+   ENUM_GSA_TRADE_DIRECTION direction;
+   double                   confidence;
+  };
+
 enum ENUM_GSA_EA_STATE
   {
    GSA_STATE_INITIALIZING = 0,
