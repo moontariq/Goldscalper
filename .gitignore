@@ -1,0 +1,14 @@
+# MetaTrader build artefacts
+*.ex5
+*.ex4
+*.log
+*.tmp
+*.bak
+*.set
+*.fxt
+*.hst
+*.opt
+
+# IDE files
+.vscode/
+.idea/
