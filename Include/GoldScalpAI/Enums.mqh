@@ -38,6 +38,17 @@ struct GSA_SIGNAL_SCORE
    double                   confidence;
   };
 
+struct GSA_TRADE_PLAN
+  {
+   bool                     valid;
+   ENUM_GSA_TRADE_DIRECTION direction;
+   double                   entry_price;
+   double                   stop_loss;
+   double                   take_profit;
+   double                   volume;
+   double                   confidence;
+  };
+
 enum ENUM_GSA_EA_STATE
   {
    GSA_STATE_INITIALIZING = 0,
