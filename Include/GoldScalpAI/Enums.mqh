@@ -69,6 +69,16 @@ struct GSA_EXIT_RECOMMENDATION
    double suggested_stop_loss;
   };
 
+struct GSA_TRADE_STATISTICS
+  {
+   int    closed_trades;
+   int    wins;
+   int    losses;
+   double net_profit;
+   double gross_profit;
+   double gross_loss;
+  };
+
 enum ENUM_GSA_EA_STATE
   {
    GSA_STATE_INITIALIZING = 0,
