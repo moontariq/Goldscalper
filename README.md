@@ -2,27 +2,23 @@
 
 Professional MT5 Expert Advisor (EA) foundation for gold scalping.
 
-## Current version: v0.8.0-alpha
+## Current version: v0.9.0-alpha
 
-The EA now reads its own existing positions and produces read-only exit recommendations. Once a position reaches the configured reward multiple, it can recommend moving the stop loss to break-even and then propose an ATR-based trailing-stop level. It never modifies or closes a position.
+The EA now renders a compact on-chart status dashboard using the terminal's `Comment` area. It reports the EA state, EMA trend, market structure, signal direction/confidence, owned-position presence, and whether a dry-run trade plan is validated.
 
-## Exit planning safeguards
+## Dashboard safeguards
 
-- Position data is read only for the current symbol and the EA's magic number.
-- A recommendation is evaluated only once per newly closed signal candle.
-- Break-even is considered only after the configured profit trigger is reached.
-- Trailing is considered only when it improves upon the break-even stop level.
-- Recommendations are logged as `EXIT DRY RUN`; no trade or position-modification request is invoked.
+- Dashboard values are refreshed only once per newly closed signal candle.
+- Set `InpShowDashboard` to `false` to disable the chart display.
+- The display is cleared when the EA is removed.
+- Dashboard rendering is informational only; it does not alter orders or positions.
 
-## Configuration
+## Current safety posture
 
-- `InpBreakEvenRiskMultiple` — profit target in initial-risk multiples before break-even can be recommended (default `1.0`).
-- `InpTrailingStopAtrMultiplier` — ATR multiplier for the suggested trailing stop (default `1.0`).
-- `InpLogTradePlans` — enables or suppresses both entry-plan and exit-plan dry-run logs.
+Entry plans and exit recommendations remain dry-run only. GoldScalper does not open, modify, or close trades in v0.9.
 
-## Roadmap
+## Remaining alpha roadmap
 
-1. Foundation, protection, analysis, qualification, entry planning, and exit recommendations
-2. Dashboard, statistics, and alerts
-3. Backtesting, optimization, and execution-safety review
-4. Production release documentation
+1. v0.10 — trade statistics and alert-ready event records
+2. v0.11 — backtesting, optimization, and execution-safety review documentation
+3. Manual MT5 test review before considering any live-execution feature
