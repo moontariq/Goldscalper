@@ -2,6 +2,21 @@
 
 All notable changes to GoldScalper are documented here.
 
+## [0.8.0-alpha] - 2026-09-09
+
+### Added
+
+- Read-only position snapshots scoped to the EA symbol and magic number
+- Break-even trigger calculation from the position's initial risk
+- ATR-based trailing-stop recommendation after break-even qualification
+- Structured `EXIT DRY RUN` logging of suggested stop-loss adjustments
+
+### Safety
+
+- The EA does not modify, close, or open any position.
+- Exit recommendations are calculated only once per newly closed signal candle.
+- A trailing suggestion is accepted only when it improves the break-even stop level.
+
 ## [0.7.0-alpha] - 2026-09-09
 
 ### Added
@@ -17,7 +32,6 @@ All notable changes to GoldScalper are documented here.
 
 - A plan is rejected when price, volume, broker constraints, or inputs are invalid.
 - No MQL5 trade-request API is called; trade execution is disabled.
-- The separate v0.8 `ExitPlanner` scaffold is not integrated into the EA.
 
 ## [0.6.0-alpha] - 2026-08-06
 
