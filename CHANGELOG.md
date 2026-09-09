@@ -46,7 +46,7 @@ All notable changes to GoldScalper are documented here.
 - A plan is rejected when price, volume, broker constraints, or inputs are invalid.
 - No MQL5 trade-request API is called; trade execution is disabled.
 
-## [0.6.0-alpha] - 2026-09-09
+## [0.6.0-alpha] - 2026-08-06
 
 ### Added
 
@@ -60,7 +60,7 @@ All notable changes to GoldScalper are documented here.
 - Incomplete or conflicting analysis produces no tradable signal.
 - Trade execution remains disabled while execution and exit modules are under development.
 
-## [0.5.0-alpha] - 2026-09-09
+## [0.5.0-alpha] - 2026-08-06
 
 ### Added
 
@@ -74,7 +74,7 @@ All notable changes to GoldScalper are documented here.
 - Structure analysis uses completed candles only.
 - Trade execution remains disabled while entry and exit modules are under development.
 
-## [0.4.0-alpha] - 2026-09-09
+## [0.4.0-alpha] - 2026-08-06
 
 ### Added
 
@@ -88,7 +88,7 @@ All notable changes to GoldScalper are documented here.
 - Analysis is based on closed candles only; incomplete current-bar values are not used.
 - Trade execution remains disabled while strategy and exit modules are under development.
 
-## [0.3.0-alpha] - 2026-09-09
+## [0.3.0-alpha] - 2026-08-06
 
 ### Added
 
@@ -103,7 +103,7 @@ All notable changes to GoldScalper are documented here.
 - All v0.2 market and session gates remain active.
 - Trade execution remains disabled while strategy and exit modules are under development.
 
-## [0.2.0-alpha] - 2026-09-09
+## [0.2.0-alpha] - 2026-08-06
 
 ### Added
 
@@ -116,7 +116,7 @@ All notable changes to GoldScalper are documented here.
 
 - Trade execution remains disabled while strategy and exit modules are under development.
 
-## [0.1.0-alpha] - 2026-09-09
+## [0.1.0-alpha] - 2026-08-06
 
 ### Added
 
