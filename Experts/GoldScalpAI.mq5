@@ -1,5 +1,5 @@
 #property copyright "GoldScalper"
-#property version   "0.7.0"
+#property version   "0.8.0"
 #property strict
 #property description "Professional MT5 Gold Scalping EA foundation"
 
@@ -10,10 +10,12 @@
 #include <GoldScalpAI/DailyLossGuard.mqh>
 #include <GoldScalpAI/EntryQualifier.mqh>
 #include <GoldScalpAI/Enums.mqh>
+#include <GoldScalpAI/ExitPlanner.mqh>
 #include <GoldScalpAI/IndicatorManager.mqh>
 #include <GoldScalpAI/Logger.mqh>
 #include <GoldScalpAI/MarketData.mqh>
 #include <GoldScalpAI/MarketGuard.mqh>
+#include <GoldScalpAI/PositionReader.mqh>
 #include <GoldScalpAI/RiskManager.mqh>
 #include <GoldScalpAI/SessionManager.mqh>
 #include <GoldScalpAI/SignalScorer.mqh>
@@ -47,16 +49,21 @@ input double InpMinimumConfidence = 75.00;
 input group "Trade Planning"
 input double InpStopLossAtrMultiplier = 1.50;
 input double InpRiskRewardRatio        = 1.50;
+input group "Exit Planning"
+input double InpBreakEvenRiskMultiple  = 1.00;
+input double InpTrailingStopAtrMultiplier = 1.00;
 
 CGSABrokerManager      g_broker_manager;
 CGSAClosedBarGate      g_closed_bar_gate;
 CGSAConfig             g_config;
 CGSADailyLossGuard     g_daily_loss_guard;
 CGSAEntryQualifier     g_entry_qualifier;
+CGSAExitPlanner        g_exit_planner;
 CGSAIndicatorManager   g_indicator_manager;
 CGSALogger             g_logger;
 CGSAMarketData         g_market_data;
 CGSAMarketGuard        g_market_guard;
+CGSAPositionReader     g_position_reader;
 CGSARiskManager        g_risk_manager;
 CGSASessionManager     g_session_manager;
 CGSASignalScorer       g_signal_scorer;
@@ -78,10 +85,11 @@ int OnInit()
    if(InpSwingStrength<1 || InpStructureLookback<(InpSwingStrength*2+1) ||
       InpMinimumConfidence<GSA_MIN_CONFIDENCE || InpMinimumConfidence>GSA_MAX_CONFIDENCE ||
       InpStopLossAtrMultiplier<GSA_MIN_ATR_MULTIPLIER ||
-      InpRiskRewardRatio<GSA_MIN_RISK_REWARD)
+      InpRiskRewardRatio<GSA_MIN_RISK_REWARD || InpBreakEvenRiskMultiple<=0.0 ||
+      InpTrailingStopAtrMultiplier<GSA_MIN_ATR_MULTIPLIER)
      {
       g_state=GSA_STATE_ERROR;
-      g_logger.Error("Invalid analysis, qualification, or trade-plan configuration.");
+      g_logger.Error("Invalid analysis, trade-plan, or exit-plan configuration.");
       return INIT_PARAMETERS_INCORRECT;
      }
    if(!g_session_manager.Initialize(InpSessionStartHour,InpSessionEndHour))
@@ -111,8 +119,8 @@ int OnInit()
      }
 
    g_state=GSA_STATE_READY;
-   g_logger.Info(StringFormat("Initialized v%s for %s. Dry-run planning=%s.",
-                              GSA_VERSION,_Symbol,InpLogTradePlans ? "on" : "off"));
+   g_logger.Info(StringFormat("Initialized v%s for %s. Planning and exit recommendations are dry-run only.",
+                              GSA_VERSION,_Symbol));
    return INIT_SUCCEEDED;
   }
 
@@ -128,9 +136,7 @@ void OnTick()
       return;
    if(!g_session_manager.IsActive() || !g_market_guard.IsSpreadAcceptable(g_config))
       return;
-   if(!g_daily_loss_guard.IsWithinLimit(g_config) || !g_trade_manager.HasCapacity(g_config))
-      return;
-   if(g_config.AllowTrading() && !g_broker_manager.IsTradeEnvironmentReady())
+   if(!g_daily_loss_guard.IsWithinLimit(g_config))
       return;
 
    MqlRates bars[];
@@ -139,12 +145,33 @@ void OnTick()
    if(!g_closed_bar_gate.IsNew(bars[0].time))
       return;
 
+   double atr=0.0;
+   if(!g_indicator_manager.GetAtr(atr) || atr<=0.0)
+      return;
+
+   GSA_POSITION_SNAPSHOT position={};
+   if(g_position_reader.GetFirstOwnedPosition(g_config,position))
+     {
+      const GSA_EXIT_RECOMMENDATION recommendation=g_exit_planner.BuildRecommendation(
+         position,atr,InpBreakEvenRiskMultiple,InpTrailingStopAtrMultiplier);
+      if(InpLogTradePlans && recommendation.valid)
+         g_logger.Info(StringFormat("EXIT DRY RUN #%I64u | trigger=%.5f | suggested SL=%.5f | break-even=%s | trailing=%s",
+                                    position.ticket,recommendation.trigger_price,
+                                    recommendation.suggested_stop_loss,
+                                    recommendation.move_to_break_even ? "yes" : "no",
+                                    recommendation.trail_stop ? "yes" : "no"));
+      return;
+     }
+
+   if(!g_trade_manager.HasCapacity(g_config))
+      return;
+   if(g_config.AllowTrading() && !g_broker_manager.IsTradeEnvironmentReady())
+      return;
+
    const ENUM_GSA_MARKET_TREND trend=g_trend_analyzer.GetTrend(g_indicator_manager);
    const ENUM_GSA_MARKET_STRUCTURE structure=g_smart_money_analyzer.Analyze(
       bars,ArraySize(bars),InpSwingStrength);
-   double atr=0.0;
-   const bool has_valid_atr=(g_indicator_manager.GetAtr(atr) && atr>0.0);
-   const GSA_SIGNAL_SCORE score=g_signal_scorer.Score(trend,structure,has_valid_atr);
+   const GSA_SIGNAL_SCORE score=g_signal_scorer.Score(trend,structure,true);
    if(!g_entry_qualifier.IsQualified(score,InpMinimumConfidence))
       return;
 
@@ -160,5 +187,5 @@ void OnTick()
                                  plan.confidence,plan.entry_price,plan.stop_loss,
                                  plan.take_profit,plan.volume));
 
-   // Dry-run only: no orders are sent by v0.7.0-alpha.
+   // No order, position-modification, or close request is sent by v0.8.0-alpha.
   }
