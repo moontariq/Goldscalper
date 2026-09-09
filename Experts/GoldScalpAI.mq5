@@ -1,5 +1,5 @@
 #property copyright "GoldScalper"
-#property version   "0.8.0"
+#property version   "0.9.0"
 #property strict
 #property description "Professional MT5 Gold Scalping EA foundation"
 
@@ -8,6 +8,7 @@
 #include <GoldScalpAI/Config.mqh>
 #include <GoldScalpAI/Constants.mqh>
 #include <GoldScalpAI/DailyLossGuard.mqh>
+#include <GoldScalpAI/Dashboard.mqh>
 #include <GoldScalpAI/EntryQualifier.mqh>
 #include <GoldScalpAI/Enums.mqh>
 #include <GoldScalpAI/ExitPlanner.mqh>
@@ -28,6 +29,7 @@ input group "General"
 input long   InpMagicNumber       = GSA_DEFAULT_MAGIC;
 input bool   InpAllowTrading      = false;
 input bool   InpLogTradePlans     = true;
+input bool   InpShowDashboard     = true;
 input group "Risk Management"
 input double InpRiskPerTradePct   = 1.00;
 input double InpMaxDailyLossPct   = 3.00;
@@ -57,6 +59,7 @@ CGSABrokerManager      g_broker_manager;
 CGSAClosedBarGate      g_closed_bar_gate;
 CGSAConfig             g_config;
 CGSADailyLossGuard     g_daily_loss_guard;
+CGSADashboard          g_dashboard;
 CGSAEntryQualifier     g_entry_qualifier;
 CGSAExitPlanner        g_exit_planner;
 CGSAIndicatorManager   g_indicator_manager;
@@ -119,7 +122,7 @@ int OnInit()
      }
 
    g_state=GSA_STATE_READY;
-   g_logger.Info(StringFormat("Initialized v%s for %s. Planning and exit recommendations are dry-run only.",
+   g_logger.Info(StringFormat("Initialized v%s for %s. All trade behavior remains dry-run only.",
                               GSA_VERSION,_Symbol));
    return INIT_SUCCEEDED;
   }
@@ -127,6 +130,8 @@ int OnInit()
 void OnDeinit(const int reason)
   {
    g_indicator_manager.Release();
+   if(InpShowDashboard)
+      g_dashboard.Clear();
    g_logger.Info(StringFormat("EA stopped. Reason code=%d.",reason));
   }
 
@@ -160,6 +165,13 @@ void OnTick()
                                     recommendation.suggested_stop_loss,
                                     recommendation.move_to_break_even ? "yes" : "no",
                                     recommendation.trail_stop ? "yes" : "no"));
+      if(InpShowDashboard)
+        {
+         GSA_SIGNAL_SCORE empty_score={};
+         GSA_TRADE_PLAN empty_plan={};
+         g_dashboard.Render(g_state,GSA_TREND_UNKNOWN,GSA_STRUCTURE_UNKNOWN,
+                            empty_score,true,empty_plan);
+        }
       return;
      }
 
@@ -172,20 +184,21 @@ void OnTick()
    const ENUM_GSA_MARKET_STRUCTURE structure=g_smart_money_analyzer.Analyze(
       bars,ArraySize(bars),InpSwingStrength);
    const GSA_SIGNAL_SCORE score=g_signal_scorer.Score(trend,structure,true);
-   if(!g_entry_qualifier.IsQualified(score,InpMinimumConfidence))
-      return;
+   GSA_TRADE_PLAN plan={};
+   if(g_entry_qualifier.IsQualified(score,InpMinimumConfidence))
+      plan=g_trade_planner.Create(g_config,g_broker_manager,g_risk_manager,score,atr,
+                                  InpStopLossAtrMultiplier,InpRiskRewardRatio);
 
-   const GSA_TRADE_PLAN plan=g_trade_planner.Create(
-      g_config,g_broker_manager,g_risk_manager,score,atr,
-      InpStopLossAtrMultiplier,InpRiskRewardRatio);
+   if(InpShowDashboard)
+      g_dashboard.Render(g_state,trend,structure,score,false,plan);
+
    if(!plan.valid)
       return;
-
    if(InpLogTradePlans)
       g_logger.Info(StringFormat("DRY RUN %s | confidence=%.1f | entry=%.5f | SL=%.5f | TP=%.5f | volume=%.2f",
                                  plan.direction==GSA_DIRECTION_BUY ? "BUY" : "SELL",
                                  plan.confidence,plan.entry_price,plan.stop_loss,
                                  plan.take_profit,plan.volume));
 
-   // No order, position-modification, or close request is sent by v0.8.0-alpha.
+   // No order, position-modification, or close request is sent by v0.9.0-alpha.
   }
