@@ -9,6 +9,9 @@
 | P0-003 | P0 | Planned volume had no margin test. | Added `OrderCalcMargin` free-margin check with buffer before plan validation. | Static safety-path review. |
 | P0-004 | P0 | Position reader/exit flow assumed one owned position. | Added filtered all-owned-position iteration and per-ticket exit recommendation loop. | Static caller review. |
 | P0-005 | P0 | Broker configuration/direction checks were incomplete. | Added symbol selection, tick/contract, volume, direction, and margin validation. | Static safety-path review. |
+| P0-006 | P0 | A new server day could retain the prior day's baseline. | `IsWithinLimit` now rechecks/reinitializes the current server-day baseline. | Static rollover-path review. |
+| P1-001 | P1 | Dashboard depended on include order for version constant. | Added direct `Constants.mqh` dependency. | Static dependency review. |
+| P1-002 | P1 | Session logic stored hours even though boundary comparison must be precise. | Internal comparisons now use server-time minutes while preserving existing inclusive-hour inputs. | Static boundary-path review. |
 
 ## Open validation blockers
 

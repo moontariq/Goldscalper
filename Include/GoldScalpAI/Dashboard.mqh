@@ -1,6 +1,7 @@
 #ifndef GOLD_SCALP_AI_DASHBOARD_MQH
 #define GOLD_SCALP_AI_DASHBOARD_MQH
 
+#include "Constants.mqh"
 #include "Enums.mqh"
 
 class CGSADashboard
