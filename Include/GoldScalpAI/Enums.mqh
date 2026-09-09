@@ -49,6 +49,26 @@ struct GSA_TRADE_PLAN
    double                   confidence;
   };
 
+struct GSA_POSITION_SNAPSHOT
+  {
+   bool                     valid;
+   ulong                    ticket;
+   ENUM_GSA_TRADE_DIRECTION direction;
+   double                   entry_price;
+   double                   stop_loss;
+   double                   take_profit;
+   double                   volume;
+  };
+
+struct GSA_EXIT_RECOMMENDATION
+  {
+   bool   valid;
+   bool   move_to_break_even;
+   bool   trail_stop;
+   double trigger_price;
+   double suggested_stop_loss;
+  };
+
 enum ENUM_GSA_EA_STATE
   {
    GSA_STATE_INITIALIZING = 0,
