@@ -4,6 +4,7 @@
 #property description "Professional MT5 Gold Scalping EA foundation"
 
 #include <GoldScalpAI/BrokerManager.mqh>
+#include <GoldScalpAI/ClosedBarGate.mqh>
 #include <GoldScalpAI/Config.mqh>
 #include <GoldScalpAI/Constants.mqh>
 #include <GoldScalpAI/DailyLossGuard.mqh>
@@ -24,6 +25,7 @@
 input group "General"
 input long   InpMagicNumber       = GSA_DEFAULT_MAGIC;
 input bool   InpAllowTrading      = false;
+input bool   InpLogTradePlans     = true;
 input group "Risk Management"
 input double InpRiskPerTradePct   = 1.00;
 input double InpMaxDailyLossPct   = 3.00;
@@ -47,6 +49,7 @@ input double InpStopLossAtrMultiplier = 1.50;
 input double InpRiskRewardRatio        = 1.50;
 
 CGSABrokerManager      g_broker_manager;
+CGSAClosedBarGate      g_closed_bar_gate;
 CGSAConfig             g_config;
 CGSADailyLossGuard     g_daily_loss_guard;
 CGSAEntryQualifier     g_entry_qualifier;
@@ -108,8 +111,8 @@ int OnInit()
      }
 
    g_state=GSA_STATE_READY;
-   g_logger.Info(StringFormat("Initialized v%s for %s. Minimum confidence=%.2f.",
-                              GSA_VERSION,_Symbol,InpMinimumConfidence));
+   g_logger.Info(StringFormat("Initialized v%s for %s. Dry-run planning=%s.",
+                              GSA_VERSION,_Symbol,InpLogTradePlans ? "on" : "off"));
    return INIT_SUCCEEDED;
   }
 
@@ -133,6 +136,8 @@ void OnTick()
    MqlRates bars[];
    if(!g_market_data.GetClosedBars(InpSignalTimeframe,InpStructureLookback,bars))
       return;
+   if(!g_closed_bar_gate.IsNew(bars[0].time))
+      return;
 
    const ENUM_GSA_MARKET_TREND trend=g_trend_analyzer.GetTrend(g_indicator_manager);
    const ENUM_GSA_MARKET_STRUCTURE structure=g_smart_money_analyzer.Analyze(
@@ -149,6 +154,11 @@ void OnTick()
    if(!plan.valid)
       return;
 
-   // A validated plan exists, but execution remains disabled until v0.8 review.
-   // No orders are sent by the v0.7.0-alpha foundation.
+   if(InpLogTradePlans)
+      g_logger.Info(StringFormat("DRY RUN %s | confidence=%.1f | entry=%.5f | SL=%.5f | TP=%.5f | volume=%.2f",
+                                 plan.direction==GSA_DIRECTION_BUY ? "BUY" : "SELL",
+                                 plan.confidence,plan.entry_price,plan.stop_loss,
+                                 plan.take_profit,plan.volume));
+
+   // Dry-run only: no orders are sent by v0.7.0-alpha.
   }
