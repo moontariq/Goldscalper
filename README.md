@@ -2,28 +2,27 @@
 
 Professional MT5 Expert Advisor (EA) foundation for gold scalping.
 
-## Current version: v0.7.0-alpha
+## Current version: v0.8.0-alpha
 
-The EA can turn a qualified signal into a validated, execution-free trade plan. The plan calculates a live bid/ask entry, ATR-based stop loss, risk-reward take profit, broker-compatible stop distance, and risk-based volume. It does not send an order.
+The EA now reads its own existing positions and produces read-only exit recommendations. Once a position reaches the configured reward multiple, it can recommend moving the stop loss to break-even and then propose an ATR-based trailing-stop level. It never modifies or closes a position.
 
-## Completed v0.7 dry-run workflow
+## Exit planning safeguards
 
-- A plan is evaluated only once for each newly closed signal-timeframe candle.
-- The EA can log each accepted plan in the terminal as `DRY RUN` for manual review.
-- Set `InpLogTradePlans` to `false` to suppress those logs.
-- The output includes direction, confidence, entry, stop loss, take profit, and volume.
-- No MQL5 trade-request API is invoked; `InpAllowTrading` does not enable entries in v0.7.
+- Position data is read only for the current symbol and the EA's magic number.
+- A recommendation is evaluated only once per newly closed signal candle.
+- Break-even is considered only after the configured profit trigger is reached.
+- Trailing is considered only when it improves upon the break-even stop level.
+- Recommendations are logged as `EXIT DRY RUN`; no trade or position-modification request is invoked.
 
-## Planning safeguards
+## Configuration
 
-- Only qualified high-confidence signals can create a plan.
-- Stop loss is derived from ATR and must satisfy the broker stop-distance rule.
-- Volume is calculated from the configured percentage risk and stop distance.
-- The plan is rejected if any input, price, broker constraint, or volume is invalid.
+- `InpBreakEvenRiskMultiple` — profit target in initial-risk multiples before break-even can be recommended (default `1.0`).
+- `InpTrailingStopAtrMultiplier` — ATR multiplier for the suggested trailing stop (default `1.0`).
+- `InpLogTradePlans` — enables or suppresses both entry-plan and exit-plan dry-run logs.
 
 ## Roadmap
 
-1. Foundation, protection, analysis, qualification, and dry-run planning
-2. Reviewable execution and position lifecycle management
-3. Dashboard, statistics, and alerts
-4. Backtesting, optimization, and release documentation
+1. Foundation, protection, analysis, qualification, entry planning, and exit recommendations
+2. Dashboard, statistics, and alerts
+3. Backtesting, optimization, and execution-safety review
+4. Production release documentation
