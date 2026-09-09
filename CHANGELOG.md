@@ -2,7 +2,7 @@
 
 All notable changes to GoldScalper are documented here.
 
-## [0.7.0-alpha] - 2026-08-06
+## [0.7.0-alpha] - 2026-09-09
 
 ### Added
 
@@ -10,11 +10,14 @@ All notable changes to GoldScalper are documented here.
 - ATR-based dynamic stop loss and risk-reward take profit planning
 - Live bid/ask entry calculation by signal direction
 - Broker stop-distance and risk-based volume validation
+- Closed-bar gate to evaluate at most one plan per completed signal candle
+- Optional structured `DRY RUN` plan logging for manual terminal review
 
 ### Safety
 
 - A plan is rejected when price, volume, broker constraints, or inputs are invalid.
-- Trade execution remains disabled pending execution-layer review.
+- No MQL5 trade-request API is called; trade execution is disabled.
+- The separate v0.8 `ExitPlanner` scaffold is not integrated into the EA.
 
 ## [0.6.0-alpha] - 2026-08-06
 
@@ -42,7 +45,7 @@ All notable changes to GoldScalper are documented here.
 ### Safety
 
 - Structure analysis uses completed candles only.
-- Trade execution remains disabled while entry and exit engines are under development.
+- Trade execution remains disabled while entry and exit modules are under development.
 
 ## [0.4.0-alpha] - 2026-08-06
 
