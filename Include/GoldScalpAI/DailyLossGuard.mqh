@@ -49,6 +49,9 @@ public:
          const ulong ticket=HistoryDealGetTicket(index);
          if(ticket==0)
             continue;
+         const ENUM_DEAL_TYPE type=(ENUM_DEAL_TYPE)HistoryDealGetInteger(ticket,DEAL_TYPE);
+         if(type!=DEAL_TYPE_BUY && type!=DEAL_TYPE_SELL)
+            continue;
          today_account_result+=HistoryDealGetDouble(ticket,DEAL_PROFIT);
          today_account_result+=HistoryDealGetDouble(ticket,DEAL_SWAP);
          today_account_result+=HistoryDealGetDouble(ticket,DEAL_COMMISSION);
@@ -98,8 +101,12 @@ public:
       return net_profit;
      }
 
-   bool IsWithinLimit(const CGSAConfig &config) const
+   bool IsWithinLimit(const CGSAConfig &config)
      {
+      // Covers terminal/EA restart and a server-midnight rollover without
+      // allowing an old day baseline to remain active.
+      if(!Initialize())
+         return false;
       const double baseline=StartOfDayBalance();
       if(baseline<=0.0)
          return false;
