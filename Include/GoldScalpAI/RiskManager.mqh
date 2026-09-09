@@ -46,8 +46,14 @@ public:
       const double normalized=MathFloor(raw_volume/volume_step)*volume_step;
       if(normalized<min_volume)
          return 0.0;
-
-      return NormalizeDouble(MathMin(normalized,max_volume),VolumeDigits(volume_step));
+      const double volume=NormalizeDouble(MathMin(normalized,max_volume),VolumeDigits(volume_step));
+      double actual_loss=0.0;
+      if(!OrderCalcProfit(order_type,_Symbol,volume,entry_price,stop_loss_price,actual_loss))
+         return 0.0;
+      // Floating-point tolerance only; never round upward above monetary risk.
+      if(MathAbs(actual_loss)>risk_money+0.000001)
+         return 0.0;
+      return volume;
      }
   };
 

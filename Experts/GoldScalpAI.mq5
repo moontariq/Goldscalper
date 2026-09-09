@@ -10,6 +10,7 @@
 #include <GoldScalpAI/Constants.mqh>
 #include <GoldScalpAI/DailyLossGuard.mqh>
 #include <GoldScalpAI/Dashboard.mqh>
+#include <GoldScalpAI/EquityGuard.mqh>
 #include <GoldScalpAI/EntryQualifier.mqh>
 #include <GoldScalpAI/Enums.mqh>
 #include <GoldScalpAI/ExitPlanner.mqh>
@@ -36,6 +37,7 @@ input bool   InpLogStatistics     = true;
 input group "Risk Management"
 input double InpRiskPerTradePct   = 1.00;
 input double InpMaxDailyLossPct   = 3.00;
+input double InpMaxEquityDrawdownPct = 5.00;
 input int    InpMaxOpenPositions  = 1;
 input int    InpMaxSpreadPoints   = 500;
 input group "Trading Session (server time)"
@@ -64,6 +66,7 @@ CGSAClosedBarGate      g_closed_bar_gate;
 CGSAConfig             g_config;
 CGSADailyLossGuard     g_daily_loss_guard;
 CGSADashboard          g_dashboard;
+CGSAEquityGuard        g_equity_guard;
 CGSAEntryQualifier     g_entry_qualifier;
 CGSAExitPlanner        g_exit_planner;
 CGSAIndicatorManager   g_indicator_manager;
@@ -83,7 +86,7 @@ ENUM_GSA_EA_STATE      g_state=GSA_STATE_INITIALIZING;
 
 int OnInit()
   {
-   if(!g_config.Initialize(InpMagicNumber,InpRiskPerTradePct,InpMaxDailyLossPct,
+   if(!g_config.Initialize(InpMagicNumber,InpRiskPerTradePct,InpMaxDailyLossPct,InpMaxEquityDrawdownPct,
                            InpMaxSpreadPoints,InpMaxOpenPositions,InpAllowTrading))
      return INIT_PARAMETERS_INCORRECT;
    if(InpSwingStrength<1 || InpStructureLookback<(InpSwingStrength*2+1) ||
@@ -96,6 +99,10 @@ int OnInit()
    if(!g_indicator_manager.Initialize(InpSignalTimeframe,InpFastEmaPeriod,InpSlowEmaPeriod,InpAtrPeriod))
       return INIT_FAILED;
    if(!g_market_guard.IsSymbolTradable())
+      return INIT_FAILED;
+   if(!g_broker_manager.IsSymbolConfigurationValid())
+      return INIT_FAILED;
+   if(!g_daily_loss_guard.Initialize())
       return INIT_FAILED;
    if(g_config.AllowTrading() && !g_broker_manager.IsTradeEnvironmentReady())
       return INIT_FAILED;
@@ -119,6 +126,12 @@ void OnTick()
    if(g_state!=GSA_STATE_READY || !g_session_manager.IsActive() ||
       !g_market_guard.IsSpreadAcceptable(g_config) || !g_daily_loss_guard.IsWithinLimit(g_config))
       return;
+   if(!g_equity_guard.IsWithinDrawdownLimit(g_daily_loss_guard.StartOfDayBalance(),
+                                             g_config.MaxEquityDrawdownPercent()))
+     {
+      g_alert_logger.Emit("TRADE_REJECTED","reason=EQUITY_DRAWDOWN_LIMIT");
+      return;
+     }
 
    MqlRates bars[];
    if(!g_market_data.GetClosedBars(InpSignalTimeframe,InpStructureLookback,bars) ||
@@ -134,15 +147,19 @@ void OnTick()
       g_logger.Info(StringFormat("STATS TODAY | closed=%d | wins=%d | losses=%d | net=%.2f",
                                  statistics.closed_trades,statistics.wins,statistics.losses,statistics.net_profit));
 
-   GSA_POSITION_SNAPSHOT position={};
-   if(g_position_reader.GetFirstOwnedPosition(g_config,position))
+   GSA_POSITION_SNAPSHOT positions[];
+   const int position_count=g_position_reader.GetOwnedPositions(g_config,positions);
+   if(position_count>0)
      {
-      const GSA_EXIT_RECOMMENDATION recommendation=g_exit_planner.BuildRecommendation(position,atr,
-         InpBreakEvenRiskMultiple,InpTrailingStopAtrMultiplier);
-      if(recommendation.valid)
+      for(int position_index=0;position_index<position_count;position_index++)
         {
-         const string detail=StringFormat("ticket=%I64u | suggested SL=%.5f",position.ticket,recommendation.suggested_stop_loss);
-         g_alert_logger.Emit("EXIT_RECOMMENDATION",detail);
+         const GSA_EXIT_RECOMMENDATION recommendation=g_exit_planner.BuildRecommendation(positions[position_index],atr,
+            InpBreakEvenRiskMultiple,InpTrailingStopAtrMultiplier);
+         if(recommendation.valid)
+           {
+            const string detail=StringFormat("ticket=%I64u | suggested SL=%.5f",positions[position_index].ticket,recommendation.suggested_stop_loss);
+            g_alert_logger.Emit("EXIT_RECOMMENDATION",detail);
+           }
         }
       if(InpShowDashboard)
         {
